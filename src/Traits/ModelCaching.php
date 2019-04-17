@@ -19,10 +19,13 @@ trait ModelCaching
         $tags = $instance->makeCacheTags();
         $key = $instance->makeCacheKey();
 
-        return $instance->cache($tags)
-            ->rememberForever($key, function () use ($columns) {
+        return $instance->remember(
+            $key,
+            function () use ($columns) {
                 return parent::all($columns);
-            });
+            },
+            $tags
+        );
     }
 
     public static function bootCachable()
@@ -98,16 +101,14 @@ trait ModelCaching
         $modelClassName = get_class($this);
         $cacheKey = "{$cachePrefix}:{$modelClassName}-cooldown:seconds";
 
-        $this->cache()
-            ->rememberForever($cacheKey, function () use ($seconds) {
-                return $seconds;
-            });
+        $this->remember($cacheKey, function () use ($seconds) {
+            return $seconds;
+        });
 
         $cacheKey = "{$cachePrefix}:{$modelClassName}-cooldown:invalidated-at";
-        $this->cache()
-            ->rememberForever($cacheKey, function () {
-                return (new Carbon)->now();
-            });
+        $this->remember($cacheKey, function () {
+            return (new Carbon)->now();
+        });
 
         return $query;
     }

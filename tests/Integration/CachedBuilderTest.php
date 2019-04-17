@@ -667,14 +667,15 @@ class CachedBuilderTest extends IntegrationTestCase
         $key2 = 'genealabs:laravel-model-caching:testing::memory::authors:genealabslaravelmodelcachingtestsfixturesauthor';
         $this->cache()
             ->tags($tags1)
-            ->rememberForever(
+            ->remember(
                 $key1,
                 function () use ($key2, $authors) {
                     return [
                         'key' => $key2,
                         'value' => $authors,
                     ];
-                }
+                },
+                $tags1
             );
         $cachedBooks = (new Book)
             ->whereNotIn('id', [1, 2])

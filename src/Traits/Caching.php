@@ -1,6 +1,7 @@
 <?php namespace GeneaLabs\LaravelModelCaching\Traits;
 
 use Carbon\Carbon;
+use Closure;
 use GeneaLabs\LaravelModelCaching\CacheKey;
 use GeneaLabs\LaravelModelCaching\CacheTags;
 use Illuminate\Cache\TaggableStore;
@@ -26,6 +27,17 @@ trait Caching
         return $cache;
     }
 
+    public function remember(string $key, Closure $callback, array $tags = [])
+    {
+        $seconds = config('laravel-model-caching.timeout');
+
+        if (!is_null($seconds)) {
+            $timeout = now()->addSeconds($seconds);
+            return $this->cache($tags)->remember($key, $timeout, $callback);
+        }
+        return $this->cache($tags)->rememberForever($key, $callback);
+    }
+
     public function disableModelCaching()
     {
         $this->isCachable = false;
@@ -48,10 +60,9 @@ trait Caching
             $modelClassName = get_class($this);
             $cacheKey = "{$cachePrefix}:{$modelClassName}-cooldown:saved-at";
 
-            $this->cache()
-                ->rememberForever($cacheKey, function () {
-                    return (new Carbon)->now();
-                });
+            $this->remember($cacheKey, function () {
+                return (new Carbon)->now();
+            });
         }
     }
 
@@ -181,9 +192,8 @@ trait Caching
         $modelClassName = get_class($instance);
         $cacheKey = "{$cachePrefix}:{$modelClassName}-cooldown:saved-at";
 
-        $instance->cache()
-            ->rememberForever($cacheKey, function () {
-                return (new Carbon)->now();
-            });
+        $instance->remember($cacheKey, function () {
+            return (new Carbon)->now();
+        });
     }
 }
