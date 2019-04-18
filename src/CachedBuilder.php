@@ -277,15 +277,15 @@ class CachedBuilder extends EloquentBuilder
     ) {
         $this->checkCooldownAndRemoveIfExpired($this->model);
 
-        return $this->cache($cacheTags)
-            ->rememberForever(
-                $hashedCacheKey,
-                function () use ($arguments, $cacheKey, $method) {
-                    return [
-                        "key" => $cacheKey,
-                        "value" => parent::{$method}(...$arguments),
-                    ];
-                }
-            );
+        return $this->remember(
+            $hashedCacheKey,
+            function () use ($arguments, $cacheKey, $method) {
+                return [
+                    "key" => $cacheKey,
+                    "value" => parent::{$method}(...$arguments),
+                ];
+            },
+            $cacheTags
+        );
     }
 }
